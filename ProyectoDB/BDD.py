@@ -183,7 +183,9 @@ def gestion_saca():
     print("4. Students with Copies on Loan")
     print("5. Books/Copies Never Loaned")
     print("6. Most Requested Books/Copies")
-    print("7. Back to Main Menu")
+    print("7. Available Books/Copies")
+    print("8. Search Books by Location")
+    print("9. Back to Main Menu")
     choice = input("Enter your choice: ")
 
     if choice == '1':
@@ -199,6 +201,10 @@ def gestion_saca():
     elif choice == '6':
         libros_mas_saca()
     elif choice == '7':
+        libros_disponibles()
+    elif choice == '8':
+        buscar_libros_por_localizacion()
+    elif choice == '9':
         print("Returning to Main Menu...")
     else:
         print("Invalid choice. Please try again.")
@@ -280,6 +286,37 @@ def libros_mas_saca():
     results = cursor.fetchall()
     for row in results:
         print(row)
+    conexion.close()
+
+def libros_disponibles():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
+    cursor.execute("""
+        SELECT Ejemplares.Localizacion, Libros.Titulo
+        FROM Ejemplares
+        JOIN Libros ON Ejemplares.LibroId = Libros.LibroId
+        WHERE Ejemplares.EjemplarId NOT IN (SELECT EjemplarId FROM Saca WHERE HoraDevolucion IS NULL)
+    """)
+    results = cursor.fetchall()
+    for row in results:
+        print(f"Title: {row[1]}, Location: {row[0]}")
+    conexion.close()
+
+def buscar_libros_por_localizacion():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
+    localizacion = input("Enter location: ")
+    cursor.execute("""
+        SELECT Libros.Titulo, Ejemplares.Localizacion, 
+               CASE WHEN Saca.HoraDevolucion IS NULL THEN 'On Loan' ELSE 'Available' END AS Status
+        FROM Ejemplares
+        JOIN Libros ON Ejemplares.LibroId = Libros.LibroId
+        LEFT JOIN Saca ON Ejemplares.EjemplarId = Saca.EjemplarId AND Saca.HoraDevolucion IS NULL
+        WHERE Ejemplares.Localizacion = ?
+    """, (localizacion,))
+    results = cursor.fetchall()
+    for row in results:
+        print(f"Title: {row[0]}, Location: {row[1]}, Status: {row[2]}")
     conexion.close()
 
 def gestion_autores():
