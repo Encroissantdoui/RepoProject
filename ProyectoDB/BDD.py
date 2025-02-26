@@ -1,9 +1,9 @@
 import sqlite3
 
-def create_tables():
-    con = sqlite3.connect("Biblio.db")
+def creartablas():
+    conexion = sqlite3.connect("Biblio.db")
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Alumnes` (
             `AlumneID` INTEGER PRIMARY KEY AUTOINCREMENT,
             `Nombre` TEXT NOT NULL,
@@ -12,14 +12,14 @@ def create_tables():
             );
     """)
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Autores` (
             `AutorId` INTEGER PRIMARY KEY AUTOINCREMENT,
             `Nombre` TEXT NOT NULL
             );
     """)
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Libros` (
             `LibroId` INTEGER PRIMARY KEY AUTOINCREMENT,
             `Titulo` TEXT NOT NULL,
@@ -29,7 +29,7 @@ def create_tables():
             );
     """)
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Ejemplares` (
             `EjemplarId` INTEGER PRIMARY KEY AUTOINCREMENT,
             `Localizacion` TEXT NOT NULL,
@@ -39,7 +39,7 @@ def create_tables():
             );
     """)
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Escribe` (
             `EscribeId` INTEGER PRIMARY KEY AUTOINCREMENT,
             `AutorId` INTEGER NOT NULL,
@@ -51,7 +51,7 @@ def create_tables():
             );
     """)
 
-    con.execute("""
+    conexion.execute("""
         CREATE TABLE `Saca` (
             `PrestamoId` INTEGER PRIMARY KEY AUTOINCREMENT,
             `EjemplarId` INTEGER NOT NULL,
@@ -66,10 +66,10 @@ def create_tables():
             );
     """)
 
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
 
-def display_menu():
+def menu_de_gestion():
     while True:
         print("\nGestor Biblioteca")
         print("1. Gestion de libros")
@@ -80,20 +80,20 @@ def display_menu():
         choice = input("Enter: ")
 
         if choice == '1':
-            manage_books()
+            gestion_libros()
         elif choice == '2':
-            manage_members()
+            gestion_alumnos()
         elif choice == '3':
-            manage_loans()
+            gestion_saca()
         elif choice == '4':
-            manage_authors()
+            gestion_autores()
         elif choice == '5':
             print("Exiting...")
             break
         else:
             print("Invalid choice. Please try again.")
 
-def manage_books():
+def gestion_libros():
     print("\nManage Books")
     print("1. Incorporate New Books/Copies")
     print("2. Delete Books/Copies")
@@ -101,17 +101,17 @@ def manage_books():
     choice = input("Enter your choice: ")
 
     if choice == '1':
-        incorporate_new_book()
+        nuevos_libros()
     elif choice == '2':
-        delete_book()
+        suprimir_libros()
     elif choice == '3':
         print("Returning to Main Menu...")
     else:
         print("Invalid choice. Please try again.")
 
-def incorporate_new_book():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def nuevos_libros():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     titulo = input("Enter book title: ")
     isbn = input("Enter book ISBN: ")
     editorial = input("Enter book editorial: ")
@@ -122,20 +122,20 @@ def incorporate_new_book():
     libro_id = cursor.lastrowid
     cursor.execute("INSERT INTO Escribe (AutorId, LibroId) VALUES (?, ?)", (autor_id, libro_id))
     cursor.execute("INSERT INTO Ejemplares (Localizacion, LibroId) VALUES (?, ?)", (localizacion, libro_id))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("New book and copy incorporated successfully.")
 
-def delete_book():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def suprimir_libros():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     libro_id = input("Enter book ID to delete: ")
     cursor.execute("DELETE FROM Libros WHERE LibroId = ?", (libro_id,))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("Book deleted successfully.")
 
-def manage_members():
+def gestion_alumnos():
     print("\nManage Members")
     print("1. Incorporate New Members")
     print("2. Deregister Members")
@@ -143,39 +143,39 @@ def manage_members():
     choice = input("Enter your choice: ")
 
     if choice == '1':
-        incorporate_new_member()
+        nuevos_alumnos()
     elif choice == '2':
-        deregister_member()
+        suprimir_alumnos()
     elif choice == '3':
         print("Returning to Main Menu...")
     else:
         print("Invalid choice. Please try again.")
 
-def incorporate_new_member():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def nuevos_alumnos():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     nombre = input("Enter member name: ")
     telefono = input("Enter member phone: ")
     direccion = input("Enter member address: ")
     cursor.execute("INSERT INTO Alumnes (Nombre, Telefono, Direccion) VALUES (?, ?, ?)", (nombre, telefono, direccion))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("New member incorporated successfully.")
 
-def deregister_member():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def suprimir_alumnos():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     alumne_id = input("Enter member ID to deregister: ")
     cursor.execute("SELECT * FROM Saca WHERE AlumneId = ? AND FechaDevolucion IS NULL", (alumne_id,))
     if cursor.fetchone():
         print("Cannot deregister member with active loans.")
     else:
         cursor.execute("DELETE FROM Alumnes WHERE AlumneID = ?", (alumne_id,))
-        con.commit()
+        conexion.commit()
         print("Member deregistered successfully.")
-    con.close()
+    conexion.close()
 
-def manage_loans():
+def gestion_saca():
     print("\nManage Loans")
     print("1. Register New Loan")
     print("2. Register Return")
@@ -187,48 +187,48 @@ def manage_loans():
     choice = input("Enter your choice: ")
 
     if choice == '1':
-        register_new_loan()
+        nueva_saca()
     elif choice == '2':
-        register_return()
+        retorno()
     elif choice == '3':
-        books_on_loan()
+        libro_saca()
     elif choice == '4':
-        students_with_loans()
+        alumnos_saca()
     elif choice == '5':
-        books_never_loaned()
+        libros_no_saca()
     elif choice == '6':
-        most_requested_books()
+        libros_mas_saca()
     elif choice == '7':
         print("Returning to Main Menu...")
     else:
         print("Invalid choice. Please try again.")
 
-def register_new_loan():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def nueva_saca():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     ejemplar_id = input("Enter copy ID: ")
     alumne_id = input("Enter member ID: ")
     fecha_prestamo = input("Enter loan date (YYYY-MM-DD): ")
     fecha_devolucion = input("Enter return date (YYYY-MM-DD): ")
     cursor.execute("INSERT INTO Saca (EjemplarId, AlumneId, FechaPrestamo, FechaDevolucion) VALUES (?, ?, ?, ?)", (ejemplar_id, alumne_id, fecha_prestamo, fecha_devolucion))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("New loan registered successfully.")
 
-def register_return():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def retorno():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     prestamo_id = input("Enter loan ID to register return: ")
     fecha_devolucion = input("Enter return date (YYYY-MM-DD): ")
     hora_devolucion = input("Enter return time (YYYY-MM-DD): ")
     cursor.execute("UPDATE Saca SET HoraDevolucion = ? WHERE PrestamoId = ?", (hora_devolucion, prestamo_id))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("Return registered successfully.")
 
-def books_on_loan():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def libro_saca():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     cursor.execute("""
         SELECT Ejemplares.*
         FROM Ejemplares
@@ -238,11 +238,11 @@ def books_on_loan():
     results = cursor.fetchall()
     for row in results:
         print(row)
-    con.close()
+    conexion.close()
 
-def students_with_loans():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def alumnos_saca():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     cursor.execute("""
         SELECT Alumnes.*
         FROM Alumnes
@@ -252,11 +252,11 @@ def students_with_loans():
     results = cursor.fetchall()
     for row in results:
         print(row)
-    con.close()
+    conexion.close()
 
-def books_never_loaned():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def libros_no_saca():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     cursor.execute("""
         SELECT * FROM Ejemplares
         WHERE EjemplarId NOT IN (SELECT EjemplarId FROM Saca)
@@ -264,11 +264,11 @@ def books_never_loaned():
     results = cursor.fetchall()
     for row in results:
         print(row)
-    con.close()
+    conexion.close()
 
-def most_requested_books():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def libros_mas_saca():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     cursor.execute("""
         SELECT Libros.Titulo, COUNT(Saca.EjemplarId) AS LoanCount
         FROM Libros
@@ -280,36 +280,36 @@ def most_requested_books():
     results = cursor.fetchall()
     for row in results:
         print(row)
-    con.close()
+    conexion.close()
 
-def manage_authors():
+def gestion_autores():
     print("\nManage Authors")
     print("1. Incorporate New Author")
     print("2. Back to Main Menu")
     choice = input("Enter your choice: ")
 
     if choice == '1':
-        incorporate_new_author()
+        nuevos_autores()
     elif choice == '2':
         print("Returning to Main Menu...")
     else:
         print("Invalid choice. Please try again.")
 
-def incorporate_new_author():
-    con = sqlite3.connect("Biblio.db")
-    cursor = con.cursor()
+def nuevos_autores():
+    conexion = sqlite3.connect("Biblio.db")
+    cursor = conexion.cursor()
     nombre = input("Enter author name: ")
     cursor.execute("INSERT INTO Autores (Nombre) VALUES (?)", (nombre,))
-    con.commit()
-    con.close()
+    conexion.commit()
+    conexion.close()
     print("New author incorporated successfully.")
 
 answer = input("Crear nueva base de datos? (y/n)")
 if answer in ["y", "Y"]:
-    create_tables()
+    creartablas()
 
 else:
     print("pasa")
     
-display_menu()
+menu_de_gestion()
 
