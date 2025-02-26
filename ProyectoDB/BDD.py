@@ -225,7 +225,6 @@ def retorno():
     conexion = sqlite3.connect("Biblio.db")
     cursor = conexion.cursor()
     prestamo_id = input("Enter loan ID to register return: ")
-    fecha_devolucion = input("Enter return date (YYYY-MM-DD): ")
     hora_devolucion = input("Enter return time (YYYY-MM-DD): ")
     cursor.execute("UPDATE Saca SET HoraDevolucion = ? WHERE PrestamoId = ?", (hora_devolucion, prestamo_id))
     conexion.commit()
