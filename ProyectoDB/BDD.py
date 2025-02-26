@@ -316,7 +316,7 @@ def buscar_libros_por_localizacion():
     """, (localizacion,))
     results = cursor.fetchall()
     for row in results:
-        print(f"Title: {row[0]}, Location: {row[1]}, Status: {row[2]}")
+        print(f"Title: {row[0]}, Location: {row[1]}")
     conexion.close()
 
 def gestion_autores():
