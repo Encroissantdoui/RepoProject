@@ -79,7 +79,7 @@ def menu_de_gestion():
         print("3. Gestion de prestamos")
         print("4. Gestion de autores")
         print("5. Gestion de ejemplares")
-        print("6. Gestion de saca")
+        print("6. Gestion de escribe")
         print("7. Lista de operaciones")
         print("8. Exit")
         choice = input("Enter: ")
@@ -95,7 +95,7 @@ def menu_de_gestion():
         elif choice == '5':
             gestion_ejemplares()
         elif choice == '6':
-            gestion_saca_records()
+            gestion_escribe()
         elif choice == '7':
             lista_de_operaciones()
         elif choice == '8':
@@ -103,6 +103,53 @@ def menu_de_gestion():
             break
         else:
             print("Invalido")
+
+
+def gestion_escribe():
+    print("\nGestion de escribe")
+    print("1. Suprimir escribe")
+    print("2. Regresa")
+    choice = input("Enter: ")
+
+    if choice == '1':
+        suprimir_escribe()
+    elif choice == '2':
+        print("Saliendo")
+    else:
+        print("Invalido")
+
+def suprimir_escribe():
+    conexion = sqlite3.connect("Biblio.db")
+    conexion.execute("PRAGMA foreign_keys = ON;")
+    cursor = conexion.cursor()
+    nombre_autor = input("Introduce el nombre del autor: ")
+    cursor.execute("""
+        SELECT Autores.AutorId, Autores.Nombre
+        FROM Autores
+        WHERE Autores.Nombre = ?
+    """, (nombre_autor,))
+    autor = cursor.fetchone()
+    if autor:
+        autor_id = autor[0]
+        cursor.execute("""
+            SELECT Escribe.EscribeId, Libros.Titulo
+            FROM Escribe
+            JOIN Libros ON Escribe.LibroId = Libros.LibroId
+            WHERE Escribe.AutorId = ?
+        """, (autor_id,))
+        escribe_list = cursor.fetchall()
+        if escribe_list:
+            for row in escribe_list:
+                print(f"Escribe ID: {row[0]}, Titulo: {row[1]}")
+            escribe_id = input("Introduce el ID del escribe a eliminar: ")
+            cursor.execute("DELETE FROM Escribe WHERE EscribeId = ?", (escribe_id,))
+            conexion.commit()
+            print("eliminado.")
+        else:
+            print("No se encontraron.")
+    else:
+        print("No se encontro un autor con ese nombre.")
+    conexion.close()
 
 def gestion_libros():
     print("\nGestion de libros")
@@ -128,12 +175,23 @@ def nuevos_libros():
     isbn = input("ISBN: ")
     editorial = input("Editorial: ")
     paginas = input("Paginas: ")
-    autor_id = input("ID del autor: ")
+    autor_nombre = input("Nombre del autor: ")
     localizacion = input("Introduce la localización del ejemplar: ")
+
     cursor.execute("INSERT INTO Libros (Titulo, ISBN, Editorial, Paginas) VALUES (?, ?, ?, ?)", (titulo, isbn, editorial, paginas))
     libro_id = cursor.lastrowid
+
+    cursor.execute("SELECT AutorId FROM Autores WHERE Nombre = ?", (autor_nombre,))
+    autor = cursor.fetchone()
+    if autor:
+        autor_id = autor[0]
+    else:
+        cursor.execute("INSERT INTO Autores (Nombre) VALUES (?)", (autor_nombre,))
+        autor_id = cursor.lastrowid
+
     cursor.execute("INSERT INTO Escribe (AutorId, LibroId) VALUES (?, ?)", (autor_id, libro_id))
     cursor.execute("INSERT INTO Ejemplares (Localizacion, LibroId) VALUES (?, ?)", (localizacion, libro_id))
+
     conexion.commit()
     conexion.close()
     print("Nuevo libro y ejemplar incorporados.")
@@ -142,18 +200,18 @@ def suprimir_libros():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
-    titulo = input("Introduce el título del libro a eliminar (Asegurar que el ejemplar esta eliminado primero): ")
+    titulo = input("Introduce el titulo del libro a eliminar (Asegurar que el ejemplar esta eliminado primero): ")
     cursor.execute("SELECT LibroId, Titulo FROM Libros WHERE Titulo = ?", (titulo,))
     results = cursor.fetchall()
     if results:
         for row in results:
-            print(f"ID: {row[0]}, Título: {row[1]}")
+            print(f"ID: {row[0]}, titulo: {row[1]}")
         libro_id = input("Introduce el ID del libro a eliminar: ")
         cursor.execute("DELETE FROM Libros WHERE LibroId = ?", (libro_id,))
         conexion.commit()
         print("Libro eliminado.")
     else:
-        print("No se encontraron libros con ese título.")
+        print("No se encontraron libros con ese titulo.")
     conexion.close()
 
     #REVIEWED SECTION ABOVE 1
@@ -213,7 +271,8 @@ def gestion_saca():
     print("\ngestion de prestamos")
     print("1. registrar nuevo prestamo")
     print("2. registrar devolucion")
-    print("3. regresar al menu principal")
+    print("3. suprimir saca")
+    print("4. regresar al menu principal")
     choice = input("Enter: ")
 
     if choice == '1':
@@ -221,6 +280,8 @@ def gestion_saca():
     elif choice == '2':
         retorno()
     elif choice == '3':
+        suprimir_saca()
+    elif choice == '4':
         print("Saliendo")
     else:
         print("Invalido")
@@ -229,30 +290,34 @@ def nueva_saca():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
-    ejemplar_id = input("Introduce el ID del ejemplar: ")
-    alumne_id = input("Introduce el ID del miembro: ")
-    fecha_prestamo = input("Introduce la fecha de préstamo (YYYY-MM-DD): ")
-    fecha_devolucion = input("Introduce la fecha de devolución (YYYY-MM-DD): ")
-    cursor.execute("INSERT INTO Saca (EjemplarId, AlumneId, FechaPrestamo, FechaDevolucion) VALUES (?, ?, ?, ?)", (ejemplar_id, alumne_id, fecha_prestamo, fecha_devolucion))
-    conexion.commit()
+    ejemplar_id = input("Introduce el ID del ejemplar (Si no sabes, utiliza lista de operaciones donde puedes buscar los libros disponibles): ")
+    nombre_alumno = input("Introduce el nombre del miembro: ")
+    cursor.execute("SELECT AlumneID FROM Alumnes WHERE Nombre = ?", (nombre_alumno,))
+    alumno = cursor.fetchone()
+    if alumno:
+        alumne_id = alumno[0]
+        fecha_prestamo = input("Introduce la fecha de prestamo (YYYY-MM-DD): ")
+        fecha_devolucion = input("Introduce la fecha de devolución (YYYY-MM-DD): ")
+        cursor.execute("INSERT INTO Saca (EjemplarId, AlumneId, FechaPrestamo, FechaDevolucion) VALUES (?, ?, ?, ?)", (ejemplar_id, alumne_id, fecha_prestamo, fecha_devolucion))
+        conexion.commit()
+        print("Nuevo prestamo registrado.")
+    else:
+        print("No se encontro un miembro con ese nombre.")
+    
     conexion.close()
-    print("Nuevo prestamo registrado.")
 
 def retorno():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
     
-    nombre_alumno = input("Introduce el nombre del alumno: ")
-    localizacion = input("Introduce la localizacion del ejemplar: ")
+    ejemplar_id = input("Introduce el ID del ejemplar para registrar la devolución: ")
     
     cursor.execute("""
         SELECT Saca.PrestamoId
         FROM Saca
-        JOIN Alumnes ON Saca.AlumneId = Alumnes.AlumneID
-        JOIN Ejemplares ON Saca.EjemplarId = Ejemplares.EjemplarId
-        WHERE Alumnes.Nombre = ? AND Ejemplares.Localizacion = ? AND Saca.HoraDevolucion IS NULL
-    """, (nombre_alumno, localizacion))
+        WHERE EjemplarId = ? AND HoraDevolucion IS NULL
+    """, (ejemplar_id,))
     
     results = cursor.fetchall()
     
@@ -260,14 +325,14 @@ def retorno():
         for row in results:
             print(f"Prestamo ID: {row[0]}")
         
-        prestamo_id = input("Introduce el ID del préstamo para registrar la devolución: ")
+        prestamo_id = input("Introduce el ID del prestamo para registrar la devolución: ")
         hora_devolucion = input("Introduce la hora de devolución (YYYY-MM-DD): ")
         
         cursor.execute("UPDATE Saca SET HoraDevolucion = ? WHERE PrestamoId = ?", (hora_devolucion, prestamo_id))
         conexion.commit()
         print("Devolucion registrada.")
     else:
-        print("No se encontraron.")
+        print("No se encontraron prestamos pendientes para ese ejemplar.")
     
     conexion.close()
 
@@ -331,7 +396,7 @@ def libros_mas_saca():
         print(row)
     conexion.close()
 
-    #REVIEWED SECTION ABOVE 2, LIBROS MAS SACA REQUIRES FURTHER TESTING
+    #REVIEWED SECTION ABOVE 2
 
 def libros_disponibles():
     conexion = sqlite3.connect("Biblio.db")
@@ -354,16 +419,14 @@ def buscar_libros_por_localizacion():
     cursor = conexion.cursor()
     localizacion = input("Enter location: ")
     cursor.execute("""
-        SELECT Libros.Titulo, Ejemplares.Localizacion, 
-               CASE WHEN Saca.HoraDevolucion IS NULL THEN 'On Loan' ELSE 'Available' END AS Status
+        SELECT Ejemplares.EjemplarId, Libros.Titulo, Ejemplares.Localizacion
         FROM Ejemplares
         JOIN Libros ON Ejemplares.LibroId = Libros.LibroId
-        LEFT JOIN Saca ON Ejemplares.EjemplarId = Saca.EjemplarId AND Saca.HoraDevolucion IS NULL
         WHERE Ejemplares.Localizacion = ?
     """, (localizacion,))
     results = cursor.fetchall()
     for row in results:
-        print(f"Titulo: {row[0]}, Localizacion: {row[1]}")
+        print(f"Ejemplar ID: {row[0]}, Titulo: {row[1]}, Localizacion: {row[2]}")
     conexion.close()
 
 def gestion_autores():
@@ -397,7 +460,7 @@ def suprimir_autores():
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
     nombre = input("Introduce el nombre del autor a eliminar: ")
-    cursor.execute("SELECT AutorId, Nombre FROM Autores WHERE Nombre = ?", ('%' + nombre + '%',))
+    cursor.execute("SELECT AutorId, Nombre FROM Autores WHERE Nombre = ?", (nombre,))
     results = cursor.fetchall()
     if results:
         for row in results:
@@ -427,50 +490,49 @@ def suprimir_ejemplares():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
-    ejemplar_id = input("Introduce el ID del ejemplar a eliminar: ")
-    cursor.execute("SELECT EjemplarId FROM Ejemplares WHERE EjemplarId = ?", (ejemplar_id,))
-    if cursor.fetchone():
+    titulo = input("Introduce el titulo del libro del ejemplar a eliminar: ")
+    cursor.execute("""
+        SELECT Ejemplares.EjemplarId, Libros.Titulo, Ejemplares.Localizacion
+        FROM Ejemplares
+        JOIN Libros ON Ejemplares.LibroId = Libros.LibroId
+        WHERE Libros.Titulo = ?
+    """, (titulo,))
+    results = cursor.fetchall()
+    if results:
+        for row in results:
+            print(f"ID: {row[0]}, titulo: {row[1]}, Localización: {row[2]}")
+        ejemplar_id = input("Introduce el ID del ejemplar a eliminar: ")
         cursor.execute("DELETE FROM Ejemplares WHERE EjemplarId = ?", (ejemplar_id,))
         conexion.commit()
         print("Ejemplar eliminado.")
     else:
-        print("No se encontró el ejemplar con ese ID.")
+        print("No se encontraron ejemplares con ese titulo.")
     conexion.close()
 
-    #SUPRIMIR EJEMPLARES REQUIRES MOD
-
-def gestion_saca_records():
-    print("\nGestion de saca")
-    print("1. Suprimir saca")
-    print("2. Regresa a menu")
-    choice = input("Enter: ")
-
-    if choice == '1':
-        suprimir_saca()
-    elif choice == '2':
-        print("Regresando")
-    else:
-        print("Invalido")
 
 def suprimir_saca():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
-    prestamo_id = input("Introduce el ID del préstamo a eliminar: ")
-    cursor.execute("SELECT PrestamoId FROM Saca WHERE PrestamoId = ?", (prestamo_id,))
-    if cursor.fetchone():
-        cursor.execute("SELECT * FROM Ejemplares WHERE EjemplarId IN (SELECT EjemplarId FROM Saca WHERE PrestamoId = ?)", (prestamo_id,))
-        if cursor.fetchone():
-            print("No se puede eliminar el préstamo porque hay ejemplares asociados.")
-        else:
-            cursor.execute("DELETE FROM Saca WHERE PrestamoId = ?", (prestamo_id,))
-            conexion.commit()
-            print("Préstamo eliminado.")
+    nombre_alumno = input("Introduce el nombre del alumno: ")
+    cursor.execute("""
+        SELECT Saca.PrestamoId, Ejemplares.Localizacion, Saca.FechaPrestamo, Saca.FechaDevolucion, Saca.HoraDevolucion
+        FROM Saca
+        JOIN Alumnes ON Saca.AlumneId = Alumnes.AlumneID
+        JOIN Ejemplares ON Saca.EjemplarId = Ejemplares.EjemplarId
+        WHERE Alumnes.Nombre = ?
+    """, (nombre_alumno,))
+    results = cursor.fetchall()
+    if results:
+        for row in results:
+            print(f"Prestamo ID: {row[0]}, Localizacion: {row[1]}, Fecha Prestamo: {row[2]}, Fecha Devolucion: {row[3]}, Hora devolucion: {row[4]}")
+        prestamo_id = input("Introduce el ID del prestamo a eliminar: ")
+        cursor.execute("DELETE FROM Saca WHERE PrestamoId = ?", (prestamo_id,))
+        conexion.commit()
+        print("Prestamo eliminado.")
     else:
-        print("No se encontró el préstamo con ese ID.")
+        print("No se encontraron prestamos para ese alumno.")
     conexion.close()
-
-    #SUPRIMIR SACA REQUIRES MOD
 
 def lista_de_operaciones():
     print("\nLista de operaciones")
