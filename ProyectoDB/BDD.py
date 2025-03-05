@@ -348,7 +348,7 @@ def libro_saca():
     """)
     results = cursor.fetchall()
     for row in results:
-        print(row)
+        print("ID", row)
     conexion.close()
 
 def alumnos_saca():
@@ -363,7 +363,7 @@ def alumnos_saca():
     """)
     results = cursor.fetchall()
     for row in results:
-        print(row)
+        print("ID", row)
     conexion.close()
 
 def libros_no_saca():
@@ -376,7 +376,7 @@ def libros_no_saca():
     """)
     results = cursor.fetchall()
     for row in results:
-        print(row)
+        print("ID", row)
     conexion.close()
 
 def libros_mas_saca():
