@@ -2,7 +2,7 @@ import sqlite3
 
 def creartablas():
     conexion = sqlite3.connect("Biblio.db")
-    conexion.execute("PRAGMA foreign_keys = ON;")
+    conexion.execute("PRAGMA foreign_keys = ON;") #forzar restricciones
     
     conexion.execute("""
         CREATE TABLE `Alumnes` (
@@ -417,7 +417,7 @@ def buscar_libros_por_localizacion():
     conexion = sqlite3.connect("Biblio.db")
     conexion.execute("PRAGMA foreign_keys = ON;")
     cursor = conexion.cursor()
-    localizacion = input("Enter location: ")
+    localizacion = input("Enter localizacion: ")
     cursor.execute("""
         SELECT Ejemplares.EjemplarId, Libros.Titulo, Ejemplares.Localizacion
         FROM Ejemplares
