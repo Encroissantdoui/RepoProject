@@ -217,7 +217,7 @@ def suprimir_libros():
         print("No se encontraron libros con ese titulo.")
     conexion.close()
 
-    #REVIEWED
+   
 
 def gestion_alumnos():
     print("\ngestion de miembros")
@@ -395,7 +395,7 @@ def libros_mas_saca():
         print(row)
     conexion.close()
 
-    #REVIEWED SECTION ABOVE 2
+
 
 def libros_disponibles():
     conexion = sqlite3.connect("Biblio.db")
@@ -570,5 +570,5 @@ else:
     
 menu_de_gestion()
 
-#REVIEW DONE, 06.03.2025
+#06.03.2025
 
