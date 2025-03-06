@@ -141,6 +141,9 @@ def suprimir_escribe():
         if escribe_list:
             for row in escribe_list:
                 print(f"Escribe ID: {row[0]}, Titulo: {row[1]}")
+
+                # f string para insercion directa
+
             escribe_id = input("Introduce el ID del escribe a eliminar: ")
             cursor.execute("DELETE FROM Escribe WHERE EscribeId = ?", (escribe_id,))
             conexion.commit()
@@ -214,7 +217,7 @@ def suprimir_libros():
         print("No se encontraron libros con ese titulo.")
     conexion.close()
 
-    #REVIEWED SECTION ABOVE 1
+    #REVIEWED
 
 def gestion_alumnos():
     print("\ngestion de miembros")
@@ -254,9 +257,6 @@ def suprimir_alumnos():
     if results:
         for row in results:
             print(f"ID: {row[0]}, Nombre: {row[1]}")
-            
-            #format string allows direct insertion
-
         alumne_id = input("Introduce el ID del miembro: ")
         cursor.execute("DELETE FROM Alumnes WHERE AlumneID = ?", (alumne_id,))
         conexion.commit()
@@ -265,7 +265,6 @@ def suprimir_alumnos():
         print("No se encontraron.")
     conexion.close()                                    
 
-    #SUPRIMIR ALUMNOS REQUIRE DEBUGGING, ALL ABOVE REVIEWED
 
 def gestion_saca():
     print("\ngestion de prestamos")
@@ -571,5 +570,5 @@ else:
     
 menu_de_gestion()
 
-#REVIEW DONE, 28.02.2025
+#REVIEW DONE, 06.03.2025
 
